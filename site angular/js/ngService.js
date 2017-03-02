@@ -26,13 +26,20 @@ app.service('requestData', function ($http, $q) {
 
     this.customSubreddit = function (sources, dataFrom) {
         var q = $q.defer();
+        var source = getLocalStorage(sources);
+        var after = "";
+
+        if(source){
+            after = source.after;
+        }
 
         return $http({
             method: 'GET',
-            url: 'https://www.reddit.com/' + dataFrom + '/' + returnSourcesInString(sources) + '/hot/.json?after=' + getLocalStorage(sources) + '&limit=50'
+            url: 'https://www.reddit.com/' + dataFrom + '/' + returnSourcesInString(sources, dataFrom) + '/hot/.json?after=' + after + '&limit=50'
         }).then(function successCallback(response) {
             q.resolve(getMediaOnly(response.data.data.children));
-            saveLocalStorage(sources, response.data.data.after);
+            var obj = {after: response.data.data.after, data: getMediaOnly(response.data.data.children)};
+            saveLocalStorage(sources, obj);
         }, function errorCallback() {
             q.reject('Failed loading data from reddit');
         }).then(function () {

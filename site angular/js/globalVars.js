@@ -4,7 +4,8 @@
 var timestamp = Math.floor(new Date() / 1000);
 var counter;
 var limit = 15;
-var subredditSources = ["reckful", "idubbz"];
+var dataLimitLoadMore = 15;
+var subredditSources = ["reckful", "idubbbz"];
 var domainSources = ["imgur.com", "youtube.com"];
 
 
