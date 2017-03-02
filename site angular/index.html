@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+
+<div ng-controller="mainflow">
+    <ul>
+        <li ng-repeat="video in mainflowJson">
+            {{ video.title }}
+            {{ video.type }}
+            {{ video.upvotes }}
+        </li>
+    </ul>
+</div>
+
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="js/localstorage.js"></script>
+<script src="js/returnObjects.js"></script>
+<script src="js/globalVars.js"></script>
+<script src="js/typeChecker.js"></script>
+<script src="js/ngApp.js"></script>
+<script src="js/ngService.js"></script>
+</body>
+</html>

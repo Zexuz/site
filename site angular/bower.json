@@ -1,0 +1,18 @@
+{
+  "name": "site angular",
+  "authors": [
+    "Isak Larsson <Isak454@hotmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
