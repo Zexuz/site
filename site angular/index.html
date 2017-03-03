@@ -12,12 +12,8 @@
     <input type="checkbox" ng-model="imagesBool"> images
     <input type="checkbox" ng-model="videosBool"> videos
     <ul>
-        <li ng-repeat="data in dataArr">
-            <ul>
-                <li ng-repeat="test in data track by $index">
-                   <pre> {{ test.title | json}} </pre>
-                </li>
-            </ul>
+        <li ng-repeat="data in dataArr | orderBy:'subreddit'">
+          <pre>   {{ data.subreddit | json}}   </pre>
         </li>
     </ul>
 </div>

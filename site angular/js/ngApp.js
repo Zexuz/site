@@ -10,15 +10,23 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     $scope.dataArr = [];
 
     $scope.displayData = function(){
-        var tempArr = [];
+        var multibleDataArrays = [];
+        var singeArrayOfAllData = [];
+
 
         for(var i = 0; i < sourceObj.domains.length; i++){
-           tempArr.push(getMediaFromLocalStorage(sourceObj.domains[i], displayAmount));
+            multibleDataArrays.push(getMediaFromLocalStorage(sourceObj.domains[i], displayAmount));
         }
-        tempArr.push(getMediaFromLocalStorage("subbredditsData", displayAmount));
-        tempArr.push(getMediaFromLocalStorage("image", displayAmount));
-        tempArr.push(getMediaFromLocalStorage("video", displayAmount));
-        $scope.dataArr = tempArr;
+        multibleDataArrays.push(getMediaFromLocalStorage("subbredditsData", displayAmount));
+        multibleDataArrays.push(getMediaFromLocalStorage("image", displayAmount));
+        multibleDataArrays.push(getMediaFromLocalStorage("video", displayAmount));
+
+
+        for(var p = 0; p < multibleDataArrays.length; p++) {
+            singeArrayOfAllData = singeArrayOfAllData.concat(multibleDataArrays[p]);
+        }
+
+        $scope.dataArr = singeArrayOfAllData;
 
     };
 
@@ -36,7 +44,7 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     $scope.getData();
 
     $scope.$watch('[imagesBool, videosBool]', function () {
-        var tempObj = setImagesVideosBool(counter, $scope.imagesBool, $scope.videosBool)
+        var tempObj = setImagesVideosBool(counter, $scope.imagesBool, $scope.videosBool);
         saveLocalStorage("counter", tempObj);
     }, true);
 });
