@@ -9,7 +9,7 @@
  * @param timestamp
  * @returns {{counter: {image: *, video: *}, timestamp: *, types: {image: boolean, video: boolean}}}
  */
-function returnCounterObj(counterImage, counterVideo, timestamp) {
+function returnCounterObj(counterImage, counterVideo, timestamp, images, videos) {
     return {
         counter: {
             image: counterImage,
@@ -17,11 +17,25 @@ function returnCounterObj(counterImage, counterVideo, timestamp) {
         },
         timestamp: timestamp,
         types: {
-            image: true,
-            video: false
+            image: images,
+            video: videos
         }
     };
 
+}
+
+function setImagesVideosBool(counter, images, videos){
+    return {
+        counter: {
+            image: counter.counter.image,
+            video: counter.counter.video
+        },
+        timestamp: counter.timestamp,
+        types: {
+            image: images,
+            video: videos
+        }
+    };
 }
 
 /**
@@ -33,11 +47,11 @@ function returnCounterObj(counterImage, counterVideo, timestamp) {
 function getCountersFromType(type, counter) {
     var tempImageVar, tempVideoVar, requestSkip;
     if (type === "image") {
-        requestSkip = tempImageVar = counter.counter.image + 15;
+        requestSkip = tempImageVar = counter.counter.image + limit;
         tempVideoVar = counter.counter.video;
     }
     if (type === "video") {
-        requestSkip = tempVideoVar = counter.counter.video + 15;
+        requestSkip = tempVideoVar = counter.counter.video + limit;
         tempImageVar = counter.counter.image;
     }
 
@@ -108,12 +122,17 @@ function returnSourcesInString(sources, dataFrom) {
  */
 function returnAllRequestFuncs(domainSources, requestData) {
     //Permanent request, will always load more data from hotpage server
-    var requestArr = [
-        requestData.hotpage("image"),
-        requestData.hotpage("video")
-    ];
+    var requestArr = [];
 
-    if (shouldWeLoadMoreData(subredditSources)) {
+    if (shouldWeLoadMoreData("image")) {
+        requestArr.push(requestData.hotpage("image"));
+    }
+
+    if (shouldWeLoadMoreData("video")) {
+        requestArr.push(requestData.hotpage("video"));
+    }
+
+    if (shouldWeLoadMoreData("subbredditsData")) {
         requestArr.push(requestData.customSubreddit(subredditSources, "r"));
     }
 
@@ -123,7 +142,6 @@ function returnAllRequestFuncs(domainSources, requestData) {
             requestArr.push(requestData.customSubreddit(domainSources[i], "domain"));
         }
     }
-
     return requestArr;
 }
 
@@ -131,4 +149,26 @@ function returnAllRequestFuncs(domainSources, requestData) {
 function shouldWeLoadMoreData(sourceName) {
     var domainObj = getLocalStorage(sourceName);
     return (domainObj === null || domainObj.data.length < dataLimitLoadMore);
+}
+
+function removeEmptyArrays(arr) {
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].length === 0) {
+            arr.splice(i, 1);
+        }
+    }
+    return arr;
+}
+
+
+function getMediaFromLocalStorage(source, amount) {
+    var tempData = getLocalStorage(source);
+
+    if (!tempData || tempData.data.length < amount) return [];
+
+    var tempArr = tempData.data.slice(0, amount);
+    tempData.data.splice(0, amount);
+
+    saveLocalStorage(source, tempData);
+    return tempArr;
 }

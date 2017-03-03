@@ -8,16 +8,21 @@
 
 
 <div ng-controller="mainflow">
+    <button ng-click="getData();"> getData</button>
+    <input type="checkbox" ng-model="imagesBool"> images
+    <input type="checkbox" ng-model="videosBool"> videos
     <ul>
-        <li ng-repeat="video in mainflowJson">
-            {{ video.title }}
-            {{ video.type }}
-            {{ video.upvotes }}
+        <li ng-repeat="data in dataArr">
+            <ul>
+                <li ng-repeat="test in data track by $index">
+                   <pre> {{ test.title | json}} </pre>
+                </li>
+            </ul>
         </li>
     </ul>
 </div>
 
-
+<script src="bower_components/jquery/dist/jquery.js"></script>
 <script src="bower_components/angular/angular.js"></script>
 <script src="js/localstorage.js"></script>
 <script src="js/returnObjects.js"></script>
