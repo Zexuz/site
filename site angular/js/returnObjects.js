@@ -2,71 +2,6 @@
  * Created by isak16 on 2017-03-02.
  */
 
-/**
- *
- * @param counterImage
- * @param counterVideo
- * @param timestamp
- * @returns {{counter: {image: *, video: *}, timestamp: *, types: {image: boolean, video: boolean}}}
- */
-function returnCounterObj(counterImage, counterVideo, timestamp, images, videos) {
-    return {
-        counter: {
-            image: counterImage,
-            video: counterVideo
-        },
-        timestamp: timestamp,
-        types: {
-            image: images,
-            video: videos
-        }
-    };
-
-}
-
-function setImagesVideosBool(counter, images, videos){
-    return {
-        counter: {
-            image: counter.counter.image,
-            video: counter.counter.video
-        },
-        timestamp: counter.timestamp,
-        types: {
-            image: images,
-            video: videos
-        }
-    };
-}
-
-/**
- *
- * @param type
- * @param counter
- * @returns {{requestSkip: *, videoCounter: *, imageCounter: *}}
- */
-function getCountersFromType(type, counter) {
-    var tempImageVar, tempVideoVar, requestSkip;
-    if (type === "image") {
-        requestSkip = tempImageVar = counter.counter.image + limit;
-        tempVideoVar = counter.counter.video;
-    }
-    if (type === "video") {
-        requestSkip = tempVideoVar = counter.counter.video + limit;
-        tempImageVar = counter.counter.image;
-    }
-
-    return {
-        requestSkip: requestSkip,
-        videoCounter: tempVideoVar,
-        imageCounter: tempImageVar
-    }
-}
-
-/**
- *
- * @param obj
- * @returns {{subreddit: *, title: (*|string), type: *, linkToScrapedFrom: string, scrapedFromDomain: string, embedUrl: (*|$location.url|Function|b|Vg.url|ie.url), fromDomain: string, upvotes: *, timestamp: number, nsfw: *, thumbnail: boolean}}
- */
 function returnVideoObject(obj) {
     var type;
     if (obj.post_hint === "rich:video") {
@@ -95,90 +30,109 @@ function returnVideoObject(obj) {
     };
 }
 
-/**
- *
- * @param sources
- * @param dataFrom
- * @returns {*}
- */
-function returnSourcesInString(sources, dataFrom) {
+function executeAllReq(requestData) {
+    var loadTheseSubs = shouldWeLoadMoreData(sourceObj.subreddits, "r");
+    var type = requestTypeFromBools();
 
-    if (dataFrom === "domain") return sources;
-
-    var sourcesString = '';
-    for (var i = 0; i < sources.length; i++) {
-        sourcesString += sources[i] + "+";
+    //add mainflow
+    if (type) {
+        requestData.hotpage(type);
     }
-    return sourcesString;
-}
-
-
-/**
- *
- * @param domainSources
- * @param requestData
- * @returns {*[]} Array of all functions to run to get more data
- *
- */
-function returnAllRequestFuncs(domainSources, requestData) {
-    //Permanent request, will always load more data from hotpage server
-    var requestArr = [];
-
-    if (shouldWeLoadMoreData("image")) {
-        requestArr.push(requestData.hotpage("image"));
+    //add subs
+    for(var p = 0; p < loadTheseSubs.length; p++){
+        requestData.customSubreddit(loadTheseSubs[p], "r");
     }
-
-    if (shouldWeLoadMoreData("video")) {
-        requestArr.push(requestData.hotpage("video"));
-    }
-
-    if (shouldWeLoadMoreData("subbredditsData")) {
-        requestArr.push(requestData.customSubreddit(subredditSources, "r"));
-    }
-
     //add domain requests
-    for (var i = 0; i < domainSources.length; i++) {
-        if (shouldWeLoadMoreData(domainSources[i])) {
-            requestArr.push(requestData.customSubreddit(domainSources[i], "domain"));
+    for (var i = 0; i < sourceObj.domains.length; i++) {
+        if (shouldWeLoadMoreData(sourceObj.domains[i], "domain")) {
+            requestData.customSubreddit(sourceObj.domains[i], "domain");
         }
     }
-    return requestArr;
 }
 
-
-function shouldWeLoadMoreData(sourceName) {
-    var domainObj = getLocalStorage(sourceName);
-    return (domainObj === null || domainObj.data.length < dataLimitLoadMore);
-}
-
-function removeEmptyArrays(arr) {
-    for (var i = 0; i < arr.length; i++) {
-        if (arr[i].length === 0) {
-            arr.splice(i, 1);
+function shouldWeLoadMoreData(sourceName, from) {
+    if (from === "r") {
+        var tempArr = [];
+        for (var i = 0; i < sourceName.length; i++) {
+            var sourceObj = getLocalStorage(sourceName[i]);
+            if (sourceObj === null || sourceObj.data.length <= dataLimitLoadMore) {
+                tempArr.push(sourceName[i]);
+            }
         }
+        return tempArr;
     }
-    return arr;
+    if (from === "domain") {
+        var domainObj = getLocalStorage(sourceName);
+        return (domainObj === null || domainObj.data.length <= dataLimitLoadMore);
+    }
 }
 
-
-function getMediaFromLocalStorage(source, amount) {
-    var tempData = getLocalStorage(source);
-
-    if (!tempData || tempData.data.length < amount) return [];
-
+function getMediaFromLocalStorage(source, amount, tempData) {
     var tempArr = tempData.data.slice(0, amount);
     tempData.data.splice(0, amount);
-
     saveLocalStorage(source, tempData);
+
     return tempArr;
 }
 
-function shuffle(a) {
-    var j, x, i;
-    for (i = a.length; i; i--) {
-        j = Math.floor(Math.random() * i);
-        x = a[i - 1];
-        a[i - 1] = a[j];
-        a[j] = x;
+function requestTypeFromBools() {
+    var tempObj = getLocalStorage("typeBools");
+    if (!tempObj) {
+        tempObj = {
+            imagesBool: true,
+            videosBool: true
+        };
+        saveLocalStorage("typeBools", tempObj);
+    }
+
+    if (tempObj.imagesBool && !tempObj.videosBool) {
+        return "images";
+    } else if (!tempObj.imagesBool && tempObj.videosBool) {
+        return "videos";
+    } else if (!tempObj.imagesBool && !tempObj.videosBool) {
+        return false;
+    } else {
+        return "both";
     }
 }
+
+function saveCounterObj(data) {
+    var obj = getLocalStorage("counterObj");
+    if (!obj) {
+        obj = {};
+    }
+    if (!obj.imgHigh || !obj.imgLow) {
+        obj.imgHigh = data.imgHigh;
+        obj.imgLow = data.imgLow;
+    }
+    if (!obj.vidHigh || !obj.vidLow) {
+        obj.vidHigh = data.vidHigh;
+        obj.vidLow = data.vidLow;
+    }
+
+    var tempObj = {};
+    if (data.from === "video") {
+        tempObj.imgHigh = obj.imgHigh;
+        tempObj.imgLow = obj.imgLow;
+        if (data.gt !== -1) {
+            tempObj.vidHigh = data.vidHigh;
+            tempObj.vidLow = obj.vidLow;
+        } else {
+            tempObj.vidHigh = obj.vidHigh;
+            tempObj.vidLow = data.vidLow;
+        }
+
+    } else if (data.from === "image") {
+        tempObj.vidHigh = obj.vidHigh;
+        tempObj.vidLow = obj.vidLow;
+        if (data.gt !== -1) {
+            tempObj.imgHigh = data.imgHigh;
+            tempObj.imgLow = obj.imgLow;
+        } else {
+            tempObj.imgHigh = obj.imgHigh;
+            tempObj.imgLow = data.imgLow;
+        }
+    }
+    saveLocalStorage("counterObj", tempObj);
+}
+

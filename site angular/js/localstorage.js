@@ -10,3 +10,14 @@ function getLocalStorage(name){
     var retrievedObject = localStorage.getItem(name);
     return JSON.parse(retrievedObject);
 }
+
+
+function saveSessionLocalStorage(name, obj){
+    // Put the object into storage
+    sessionStorage.setItem(name, JSON.stringify(obj));
+}
+
+function getSessionLocalStorage(name){
+    var retrievedObject = sessionStorage.getItem(name);
+    return JSON.parse(retrievedObject);
+}

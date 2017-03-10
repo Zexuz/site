@@ -12,14 +12,15 @@
     <input type="checkbox" ng-model="imagesBool"> images
     <input type="checkbox" ng-model="videosBool"> videos
     <ul>
-        <li ng-repeat="data in dataArr | orderBy:'subreddit'">
-          <pre>   {{ data.subreddit | json}}   </pre>
+        <li ng-repeat="data in dataArr | orderBy:'-upvotes'">
+          <pre>   {{ data | json}}   </pre>
         </li>
     </ul>
 </div>
 
 <script src="bower_components/jquery/dist/jquery.js"></script>
 <script src="bower_components/angular/angular.js"></script>
+<script src="js/ngFilters.js"></script>
 <script src="js/localstorage.js"></script>
 <script src="js/returnObjects.js"></script>
 <script src="js/globalVars.js"></script>

@@ -9,44 +9,59 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
 
     $scope.dataArr = [];
 
-    $scope.displayData = function(){
-        var multibleDataArrays = [];
-        var singeArrayOfAllData = [];
-
-
+    $rootScope.displayData = function(){
+        var dataArrsDom = [];
+        var dataArrsSub = [];
         for(var i = 0; i < sourceObj.domains.length; i++){
-            multibleDataArrays.push(getMediaFromLocalStorage(sourceObj.domains[i], displayAmount));
-        }
-        multibleDataArrays.push(getMediaFromLocalStorage("subbredditsData", displayAmount));
-        multibleDataArrays.push(getMediaFromLocalStorage("image", displayAmount));
-        multibleDataArrays.push(getMediaFromLocalStorage("video", displayAmount));
-
-
-        for(var p = 0; p < multibleDataArrays.length; p++) {
-            singeArrayOfAllData = singeArrayOfAllData.concat(multibleDataArrays[p]);
+            var tempData = getLocalStorage(sourceObj.domains[i]);
+            if(tempData){
+                dataArrsDom = dataArrsDom.concat(getMediaFromLocalStorage(sourceObj.domains[i], displayAmount, tempData));
+            }
         }
 
-        $scope.dataArr = singeArrayOfAllData;
+        for(var p = 0; p < sourceObj.subreddits.length; p++){
+            var tempData1 = getLocalStorage(sourceObj.subreddits[p]);
+            if(tempData1){
+                dataArrsSub = dataArrsSub.concat(getMediaFromLocalStorage(sourceObj.subreddits[p], displayAmount, tempData1));
+            }
+        }
 
+        dataArrsDom = dataArrsDom.concat(dataArrsSub);
+        $scope.dataArr = dataArrsDom;
     };
 
     $scope.getData = function(){
-        var requestArr = returnAllRequestFuncs(domainSources, requestData);
-
-        $q.all(requestArr
-        ).then(function () {
-                $scope.displayData();
-        }).catch(function (failure) {
-            console.log(failure);
-        });
+        executeAllReq(requestData);
+        $rootScope.displayData();
     };
 
-    $scope.getData();
+    $scope.$watch('[imagesBool, videosBool]', function (newVal) {
+        var tempObj = getLocalStorage("typeBools");
 
-    $scope.$watch('[imagesBool, videosBool]', function () {
-        var tempObj = setImagesVideosBool(counter, $scope.imagesBool, $scope.videosBool);
-        saveLocalStorage("counter", tempObj);
+        if(tempObj && typeof newVal[0] !== 'undefined'){
+            tempObj = {
+                imagesBool: newVal[0],
+                videosBool: newVal[1]
+            };
+            $scope.imagesBool = newVal[0];
+            $scope.videosBool = newVal[1];
+            saveLocalStorage("typeBools", tempObj);
+        }else if(tempObj){
+            $scope.imagesBool = tempObj.imagesBool;
+            $scope.videosBool = tempObj.videosBool;
+            saveLocalStorage("typeBools", tempObj);
+        }else{
+            tempObj = {
+                imagesBool: true,
+                videosBool: true
+            };
+            $scope.imagesBool = tempObj.imagesBool;
+            $scope.videosBool = tempObj.videosBool;
+            saveLocalStorage("typeBools", tempObj);
+        }
     }, true);
+
+    $scope.getData();
 });
 
 
