@@ -16,22 +16,32 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     $scope.dataArr = [];
     $scope.nsfw = false;
 
+    $scope.sourceArr = [];
+    $scope.domainArr = [];
 
+
+    $scope.removeItemReddit = function(index){
+        $scope.sourceArr.splice(index, 1);
+    };
+    $scope.removeItemDomain = function(index){
+        $scope.domainArr.splice(index, 1);
+    };
 
     $scope.getData = function(){
-        executeAllReq(requestData, function () {
+        executeAllReq(requestData, $scope.sourceArr, $scope.domainArr, function () {
             $scope.displayData();
         });
     };
 
     $scope.addSrc = function () {
-        console.log($scope.input);
+        if($scope.input.type === "Reddit")$scope.sourceArr.push($scope.input.source);
+        if($scope.input.type === "Domain")$scope.domainArr.push($scope.input.source);
     };
 
     $scope.displayData = function(){
         var dataArrsDom = [];
         var dataArrsSub = [];
-        var amountEachSubb = Math.ceil((displayAmount/(sourceObj.subreddits.length + sourceObj.domains.length)));
+        var amountEachSubb = Math.ceil((displayAmount/($scope.sourceArr.length + $scope.domainArr.length)));
 
 
         var images = getSessionLocalStorage("images");
@@ -46,14 +56,14 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
             saveSessionLocalStorage("videos", "");
         }
 
-        angular.forEach(sourceObj.subreddits, function (value) {
+        angular.forEach($scope.sourceArr, function (value) {
             var tempData1 = getLocalStorage(value);
             if(tempData1){
                 dataArrsSub = dataArrsSub.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData1));
             }
         });
 
-        angular.forEach(sourceObj.domains, function (value) {
+        angular.forEach($scope.sourceArr, function (value) {
             var tempData = getLocalStorage(value);
             if(tempData){
                 dataArrsDom = dataArrsDom.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData));

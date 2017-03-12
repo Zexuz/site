@@ -39,8 +39,11 @@
                         <li><a href="#">One more separated link</a></li>
                     </ul>
                 </li>
+
+
                 <li>
                     <div class="form-group">
+
                         <select class="form-control col-md-6" ng-model="input.type">
                             <option>Reddit</option>
                             <option>Domain</option>
@@ -49,6 +52,12 @@
                         <input type="text" class="form-control" id="sourceInput" ng-model="input.source"  placeholder="reckful">
                     </div>
                     <button class="btn-primary btn-lg" ng-click="addSrc();">Add</button>
+                </li>
+                <li>
+                    <div class="list-group">
+                        <a href="#" class="list-group-item" ng-repeat="item in sourceArr" ng-click="removeItemReddit($index)">r/{{item}}</a>
+                        <a href="#" class="list-group-item" ng-repeat="item in domainArr" ng-click="removeItemDomain($index)">domain/{{item}}</a>
+                    </div>
                 </li>
             </ul>
         </div>

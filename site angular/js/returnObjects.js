@@ -30,7 +30,11 @@ function returnVideoObject(obj) {
     };
 }
 
-var executeAllReq = function (requestData, callback) {
+var executeAllReq = function (requestData, reddits, domains, callback) {
+    var sourceObj = {
+        subreddits: reddits,
+        domains: domains
+    };
 
     var loadTheseSubs = shouldWeLoadMoreData(sourceObj.subreddits, "r");
     var type = requestTypeFromBools();
@@ -73,7 +77,8 @@ var executeAllReq = function (requestData, callback) {
 
     async.map(urls, requestData.request, function(err, results){
         if (err){
-            console.log(err);
+            var String=err.config.url.substring(err.config.url.lastIndexOf("com/")+4,err.config.url.lastIndexOf("/hot"));
+            console.log("ERROR:"+String);
         } else {
             angular.forEach(results, function (value) {
                 if(value.reddit){
