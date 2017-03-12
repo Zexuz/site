@@ -3,36 +3,60 @@
  */
 var app = angular.module('app', []);
 
-
+app.config(function($sceDelegateProvider) {
+    $sceDelegateProvider.resourceUrlWhitelist([
+        'self',
+        'https://www.youtube.com/**',
+        'https://clips.twitch.tv/**'
+    ]);
+});
 
 app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData) {
 
     $scope.dataArr = [];
-
-    $rootScope.displayData = function(){
-        var dataArrsDom = [];
-        var dataArrsSub = [];
-        for(var i = 0; i < sourceObj.domains.length; i++){
-            var tempData = getLocalStorage(sourceObj.domains[i]);
-            if(tempData){
-                dataArrsDom = dataArrsDom.concat(getMediaFromLocalStorage(sourceObj.domains[i], displayAmount, tempData));
-            }
-        }
-
-        for(var p = 0; p < sourceObj.subreddits.length; p++){
-            var tempData1 = getLocalStorage(sourceObj.subreddits[p]);
-            if(tempData1){
-                dataArrsSub = dataArrsSub.concat(getMediaFromLocalStorage(sourceObj.subreddits[p], displayAmount, tempData1));
-            }
-        }
-
-        dataArrsDom = dataArrsDom.concat(dataArrsSub);
-        $scope.dataArr = dataArrsDom;
-    };
+    $scope.nsfw = false;
 
     $scope.getData = function(){
-        executeAllReq(requestData);
-        $rootScope.displayData();
+        executeAllReq(requestData, function () {
+            $scope.displayData();
+        });
+    };
+
+    $scope.displayData = function(){
+        var dataArrsDom = [];
+        var dataArrsSub = [];
+        var amountEachSubb = Math.ceil((displayAmount/(sourceObj.subreddits.length + sourceObj.domains.length)));
+
+
+        var images = getSessionLocalStorage("images");
+        var videos = getSessionLocalStorage("videos");
+
+        if(images){
+            dataArrsSub = dataArrsSub.concat(images);
+            saveSessionLocalStorage("images", "");
+        }
+        if(videos){
+            dataArrsSub = dataArrsSub.concat(videos);
+            saveSessionLocalStorage("videos", "");
+        }
+
+        angular.forEach(sourceObj.subreddits, function (value) {
+            var tempData1 = getLocalStorage(value);
+            if(tempData1){
+                dataArrsSub = dataArrsSub.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData1));
+            }
+        });
+
+        angular.forEach(sourceObj.domains, function (value) {
+            var tempData = getLocalStorage(value);
+            if(tempData){
+                dataArrsDom = dataArrsDom.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData));
+            }
+        });
+
+        dataArrsDom = dataArrsDom.concat(dataArrsSub);
+        console.log(dataArrsDom);
+        $scope.dataArr = dataArrsDom;
     };
 
     $scope.$watch('[imagesBool, videosBool]', function (newVal) {
@@ -61,7 +85,61 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         }
     }, true);
 
+    $scope.dataType = function (type, domain) {
+        if(type === "video"){
+            switch(domain) {
+                case "youtube.com":
+                    return "youtube";
+                    break;
+                case "youtu.be":
+                    return "youtube";
+                    break;
+                case "gfycat.com":
+                    return "gfycat";
+                    break;
+                case "clips.twitch.tv":
+                    return "twitch";
+                    break;
+                default:
+                    return false;
+            }
+        }else if(type === "image"){
+            return "image";
+        }else {
+            return false;
+        }
+    };
+
     $scope.getData();
 });
 
+app.controller("youtubeController", function ($scope) {
+    $scope.videoId = function getYoutubeVideoId(url) {
+        var p = /^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
+        p = (url.match(p)) ? RegExp.$1 : false;
+        if(p){
+            return 'https://www.youtube.com/embed/'+p+'?rel=0&autoplay=true';
+        }else {
+            return false;
+        }
+    }
+});
 
+app.controller("twitchController", function ($scope) {
+    $scope.play = false;
+    $scope.videoId = function getTwitchVideoId(url) {
+        url = url.replace('https://clips.twitch.tv/','');
+        return 'https://clips.twitch.tv/embed?clip='+url+'&autoplay=true';
+    };
+
+});
+
+
+app.controller("gfycatController", function ($scope) {
+    $scope.videoId = function getGfyCat(url){
+        var oldUrl = url;
+        oldUrl = oldUrl.replace('https://gfycat.com/','');
+        return oldUrl;
+    }
+
+});

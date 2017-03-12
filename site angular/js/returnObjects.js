@@ -10,45 +10,86 @@ function returnVideoObject(obj) {
         type = "image";
     }
 
-    var thumbnail = false;
+    var media = {};
     if (obj.media) {
-        thumbnail = obj.media.oembed.thumbnail_url;
+        media = obj.media;
     }
 
     return {
-        "subreddit": obj.subreddit,
+        "subreddit_name_prefixed": obj.subreddit_name_prefixed,
         "title": obj.title,
         "type": type,
-        "linkToScrapedFrom": "reddit.com" + obj.permalink,
-        "scrapedFromDomain": "reddit.com",
-        "embedUrl": obj.url,
-        "fromDomain": obj.domain,
-        "upvotes": obj.ups,
+        "url": obj.url,
+        "permalink": obj.permalink,
+        "post_hint": obj.post_hint,
+        "domain": obj.domain,
+        "ups": obj.ups,
         "timestamp": Math.floor(Date.now() / 1000),
-        "nsfw": obj.over_18,
-        "thumbnail": thumbnail
+        "over_18": obj.over_18,
+        "media": media
     };
 }
 
-function executeAllReq(requestData) {
+var executeAllReq = function (requestData, callback) {
+
     var loadTheseSubs = shouldWeLoadMoreData(sourceObj.subreddits, "r");
     var type = requestTypeFromBools();
+    var counterObj = getLocalStorage("counterObj");
 
+    var urls = [];
     //add mainflow
     if (type) {
-        requestData.hotpage(type);
+        if(!counterObj) counterObj = {firstRequest: true};
+        var url = 'http://localhost:3000/api/hotpage/'+type;
+
+        urls.push({
+            url: url,
+            counterObj: counterObj,
+            from: type
+        });
     }
     //add subs
     for(var p = 0; p < loadTheseSubs.length; p++){
-        requestData.customSubreddit(loadTheseSubs[p], "r");
+        var sourceData = getLocalStorage(loadTheseSubs[p]), after = "";
+        if(sourceData)after = sourceData.after;
+        var url = 'https://www.reddit.com/r/' + loadTheseSubs[p] + '/hot/.json?after=' + after + '&limit=50';
+        urls.push({
+            url: url,
+            from: loadTheseSubs[p]
+        });
     }
     //add domain requests
     for (var i = 0; i < sourceObj.domains.length; i++) {
         if (shouldWeLoadMoreData(sourceObj.domains[i], "domain")) {
-            requestData.customSubreddit(sourceObj.domains[i], "domain");
+            var sourceData = getLocalStorage(sourceObj.domains[i]), after = "";
+            if(sourceData)after = sourceData.after;
+            var url = 'https://www.reddit.com/domain/' + sourceObj.domains[i] + '/hot/.json?after=' + after + '&limit=50';
+            urls.push({
+                url: url,
+                from: sourceObj.domains[i]
+            });
         }
     }
-}
+
+    async.map(urls, requestData.request, function(err, results){
+        if (err){
+            console.log(err);
+        } else {
+            angular.forEach(results, function (value) {
+                if(value.reddit){
+                    var obj = {after: value.response.data.data.after, data: getMediaOnly(value.response.data.data.children)};
+                    saveLocalStorage(value.from, obj);
+                }else{
+                    saveResponseLocal(value.from, value.response);
+                }
+            });
+            callback("done");
+        }
+    });
+
+
+};
+
 
 function shouldWeLoadMoreData(sourceName, from) {
     if (from === "r") {
@@ -136,3 +177,14 @@ function saveCounterObj(data) {
     saveLocalStorage("counterObj", tempObj);
 }
 
+function saveResponseLocal(type, response) {
+    if(type === "both"){
+        saveSessionLocalStorage("images", response.data.dataImages.media);
+        saveSessionLocalStorage("videos", response.data.dataVideos.media);
+        saveCounterObj(response.data.dataImages);
+        saveCounterObj(response.data.dataVideos);
+    }else{
+        saveSessionLocalStorage(type, response.data.media);
+        saveCounterObj(response.data);
+    }
+}

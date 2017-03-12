@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700');
+
+$font-color: whitesmoke;
+$bg-color: #888888;
+$default-font: 'Open Sans', sans-serif;
+
+body{
+  padding-top: 70px;
+  background-color: rgba(15, 15, 15, 0.49);
+}
+
+.header-custom{
+  height: 70px;
+  border-bottom: black solid 1px;
+  color: whitesmoke;
+  font-family: $default-font;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: $font-color !important;
+  line-height: 40px;
+  font-size: 15px;
+}
+
+.navbar {
+  background-color: #3a3a3a;
+}
+
+.navbar-header{
+  height: 70px;
+}
+
+.navbar-default .navbar-nav > li > a, .navbar-default .navbar-brand {
+  color: $font-color;
+
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: $font-color;
+  background-color: transparent;
+}
+
+@media only screen and (max-width: 766px) {
+  .collapsing, .in {
+    background-color: rgba(58, 58, 58, 0.61);
+  }
+}
+
+.navbar-default .navbar-brand {
+  color: $font-color !important;
+  background-color: transparent !important;
+  font-size: 27px;
+  line-height: 40px !important;
+}
+
+.label-default{
+  margin: 0;
+}
+
+//Youtube
+.youtube-lazy{
+  img{
+    width: 100%;
+  }
+}
+
+//Media
+.media-item{
+  padding: 0;
+  background-color: #0f0f0f;
+  margin-bottom: 10px;
+  font-family: $default-font;
+
+  .title{
+    font-family: $default-font;
+    font-size: 15px;
+    padding: 10px;
+  }
+  .values{
+    padding-top: 10px;
+  }
+  .span{
+    word-wrap: break-word;
+    padding: 0 !important;
+  }
+  img{
+    width: 100%;
+  }
+}
+
+.media-item *{
+  color: whitesmoke;
+}
+
+
+
+.twitch-glow{
+  box-shadow: 0 0 30px 5px rgb(104, 42, 123);
+}
+.play-button-outer {
+  z-index: 2;
+  position: absolute;
+  margin-left: calc(50% - 5em);
+  margin-top: calc(25% - 5em);
+  width: 10em;
+  height: 10em;
+  background-color: rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+
+.play-button {
+  margin: 0 auto;
+  top: 25%;
+  position: relative;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 2.5em 0 2.5em 5em;
+  border-color: transparent transparent transparent #000;
+  opacity: .75;
+}
+
+.play-button-outer:hover {
+  background-color: rgba(0, 0, 0, .5);
+}
+
+.play-button-outer:hover .play-button {
+  opacity: 1;
+}
+
+.image-media{
+  padding: 0;
+}

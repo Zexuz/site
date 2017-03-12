@@ -1,25 +1,56 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="app">
 <head>
-    <meta charset="UTF-8">
+    <meta name="viewport" charset="UTF-8" content="width=device-width, initial-scale=1">
     <title></title>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg">
+    <link rel="stylesheet" href="scss/main.css">
 </head>
 <body>
 
 
-<div ng-controller="mainflow">
+<nav class="navbar navbar-default navbar-fixed-top header-custom">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a ui-sref="population" class="navbar-brand">Mämes.se</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="population"><a ui-sref="population">Mämes</a></li>
+                <li class="density"><a ui-sref="density">Mer mämes</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<section ng-controller="mainflow" class="col-md-6 col-md-offset-3">
     <button ng-click="getData();"> getData</button>
     <input type="checkbox" ng-model="imagesBool"> images
     <input type="checkbox" ng-model="videosBool"> videos
-    <ul>
-        <li ng-repeat="data in dataArr | orderBy:'-upvotes'">
-          <pre>   {{ data | json}}   </pre>
-        </li>
-    </ul>
-</div>
+
+
+    <div ng-repeat="item in dataArr | orderBy:'-upvotes'">
+           <youtube ng-if="dataType(item.type, item.domain) == 'youtube'"></youtube>
+            <imagemedia ng-if="dataType(item.type, item.domain) == 'image' && item.over_18 == nsfw"></imagemedia>
+            <twitch ng-if="dataType(item.type, item.domain) == 'twitch' && item.over_18 == nsfw"></twitch>
+            <gfycat ng-if="dataType(item.type, item.domain) == 'gfycat' && item.over_18 == nsfw"></gfycat>
+    </div>
+
+</section>
+
+
 
 <script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/async/dist/async.js"></script>
 <script src="js/ngFilters.js"></script>
 <script src="js/localstorage.js"></script>
 <script src="js/returnObjects.js"></script>
@@ -27,5 +58,6 @@
 <script src="js/typeChecker.js"></script>
 <script src="js/ngApp.js"></script>
 <script src="js/ngService.js"></script>
+<script src="js/directive.js"></script>
 </body>
 </html>
