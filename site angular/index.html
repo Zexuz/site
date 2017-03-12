@@ -7,9 +7,58 @@
     <link rel="stylesheet" href="bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg">
     <link rel="stylesheet" href="scss/main.css">
 </head>
-<body>
+<body ng-controller="mainflow" >
+
+<nav class="navbar navbar-inverse sidebar navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Brand</a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-home"></span></a></li>
+                <li ><a href="#">Profile<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-user"></span></a></li>
+                <li ><a href="#">Messages<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-envelope"></span></a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Settings <span class="caret"></span><span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span></a>
+                    <ul class="dropdown-menu forAnimate" role="menu">
+                        <li><a href="#">Action</a></li>
+                        <li><a href="#">Another action</a></li>
+                        <li><a href="#">Something else here</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#">Separated link</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#">One more separated link</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="form-group">
+                        <select class="form-control col-md-6" ng-model="input.type">
+                            <option>Reddit</option>
+                            <option>Domain</option>
+                        </select>
+                        <label for="sourceInput">Name</label>
+                        <input type="text" class="form-control" id="sourceInput" ng-model="input.source"  placeholder="reckful">
+                    </div>
+                    <button class="btn-primary btn-lg" ng-click="addSrc();">Add</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="main">
+    <!-- Content Here -->
 
 
+<!--
 <nav class="navbar navbar-default navbar-fixed-top header-custom">
     <div class="container">
         <div class="navbar-header">
@@ -28,24 +77,27 @@
         </div>
     </div>
 </nav>
+-->
 
-
-<section ng-controller="mainflow" class="col-md-6 col-md-offset-3">
+<section class="col-md-6 col-md-offset-3">
     <button ng-click="getData();"> getData</button>
-    <input type="checkbox" ng-model="imagesBool"> images
-    <input type="checkbox" ng-model="videosBool"> videos
+    <input type="checkbox" ng-model="imagesBool"> Request images
+    <input type="checkbox" ng-model="videosBool"> Request videos
+
+    <input type="checkbox" ng-model="videos">MEdia Videos
+    <input type="checkbox" ng-model="images">MEdia Images
 
 
-    <div ng-repeat="item in dataArr | orderBy:'-upvotes'">
-           <youtube ng-if="dataType(item.type, item.domain) == 'youtube'"></youtube>
-            <imagemedia ng-if="dataType(item.type, item.domain) == 'image' && item.over_18 == nsfw"></imagemedia>
-            <twitch ng-if="dataType(item.type, item.domain) == 'twitch' && item.over_18 == nsfw"></twitch>
-            <gfycat ng-if="dataType(item.type, item.domain) == 'gfycat' && item.over_18 == nsfw"></gfycat>
+    <div ng-repeat="item in dataArr | orderBy:'-ups'">
+           <youtube ng-show="videos" ng-if="dataType(item.type, item.domain) == 'youtube'"></youtube>
+            <imagemedia ng-show="images" ng-if="dataType(item.type, item.domain) == 'image' && item.over_18 == nsfw"></imagemedia>
+            <twitch ng-show="videos" ng-if="dataType(item.type, item.domain) == 'twitch' && item.over_18 == nsfw"></twitch>
+            <gfycat ng-show="Images" ng-if="dataType(item.type, item.domain) == 'gfycat' && item.over_18 == nsfw"></gfycat>
     </div>
 
 </section>
 
-
+</div>
 
 <script src="bower_components/jquery/dist/jquery.js"></script>
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
