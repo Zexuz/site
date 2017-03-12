@@ -15,7 +15,7 @@ app.service('requestData', function ($http) {
                 params: params,
                 paramSerializer: '$httpParamSerializerJQLike'
             }).then(function (response) {
-                callback(null, {response: response, reddit:!params, from: input.from});
+                callback(null, {response: response, reddit:!params, from: input.from, domain: input.domain});
             }, function (error) {
                 callback(error);
             });

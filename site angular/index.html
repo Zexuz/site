@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg">
     <link rel="stylesheet" href="scss/main.css">
+
 </head>
 <body ng-controller="mainflow" >
 
@@ -39,16 +40,26 @@
                         <li><a href="#">One more separated link</a></li>
                     </ul>
                 </li>
-
-
-                <li>
+                <li style="color: whitesmoke;">
+                    <p>Mainflow</p>
+                    <input type="checkbox" ng-click="setMainFlowBool();" ng-model="display.mainflow"> Enable
+                </li>
+                <li style="color: whitesmoke;">
+                    <p>Display only</p>
+                    <input type="checkbox" ng-click="setDisplayVideoBool();" ng-model="display.video">Videos
+                    <input type="checkbox" ng-click="setDisplayImageBool();" ng-model="display.image">Images
+                </li>
+                <li class="text-center">
+                    <button ng-click="getData();" class="btn-danger"> getData</button>
+                </li>
+                <li style="color: whitesmoke;">
                     <div class="form-group">
-
-                        <select class="form-control col-md-6" ng-model="input.type">
+                        <p>Type:</p>
+                        <select class="form-control col-md-6" id="selectType" ng-model="input.type">
                             <option>Reddit</option>
                             <option>Domain</option>
                         </select>
-                        <label for="sourceInput">Name</label>
+                        <p>Name:</p>
                         <input type="text" class="form-control" id="sourceInput" ng-model="input.source"  placeholder="reckful">
                     </div>
                     <button class="btn-primary btn-lg" ng-click="addSrc();">Add</button>
@@ -64,48 +75,15 @@
     </div>
 </nav>
 <div class="main">
-    <!-- Content Here -->
-
-
-<!--
-<nav class="navbar navbar-default navbar-fixed-top header-custom">
-    <div class="container">
-        <div class="navbar-header">
-            <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a ui-sref="population" class="navbar-brand">Mämes.se</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav navbar-right">
-                <li class="population"><a ui-sref="population">Mämes</a></li>
-                <li class="density"><a ui-sref="density">Mer mämes</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
--->
-
 <section class="col-md-6 col-md-offset-3">
-    <button ng-click="getData();"> getData</button>
-    <input type="checkbox" ng-model="imagesBool"> Request images
-    <input type="checkbox" ng-model="videosBool"> Request videos
-
-    <input type="checkbox" ng-model="videos">MEdia Videos
-    <input type="checkbox" ng-model="images">MEdia Images
-
-
-    <div ng-repeat="item in dataArr | orderBy:'-ups'">
-           <youtube ng-show="videos" ng-if="dataType(item.type, item.domain) == 'youtube'"></youtube>
-            <imagemedia ng-show="images" ng-if="dataType(item.type, item.domain) == 'image' && item.over_18 == nsfw"></imagemedia>
-            <twitch ng-show="videos" ng-if="dataType(item.type, item.domain) == 'twitch' && item.over_18 == nsfw"></twitch>
-            <gfycat ng-show="Images" ng-if="dataType(item.type, item.domain) == 'gfycat' && item.over_18 == nsfw"></gfycat>
+    <div ng-repeat="item in dataArr | filter: filterType | filter: filterMainflow | filter: filterReddit | filter: filterDomain | orderBy:'-ups'">
+           <youtube ng-if="dataType(item.type, item.domain) == 'youtube'"></youtube>
+            <imagemedia ng-if="dataType(item.type, item.domain) == 'image' && item.over_18 == nsfw"></imagemedia>
+            <twitch ng-if="dataType(item.type, item.domain) == 'twitch' && item.over_18 == nsfw"></twitch>
+            <gfycat ng-if="dataType(item.type, item.domain) == 'gfycat' && item.over_18 == nsfw"></gfycat>
     </div>
 
 </section>
-
 </div>
 
 <script src="bower_components/jquery/dist/jquery.js"></script>
@@ -120,5 +98,6 @@
 <script src="js/ngApp.js"></script>
 <script src="js/ngService.js"></script>
 <script src="js/directive.js"></script>
+<script src="js/buttonBool.js"></script>
 </body>
 </html>

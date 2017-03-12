@@ -15,33 +15,114 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
 
     $scope.dataArr = [];
     $scope.nsfw = false;
-
     $scope.sourceArr = [];
     $scope.domainArr = [];
+    $scope.display = {};
+
+    if (getLocalStorage("mainflowBool") === null) {
+        $scope.display.mainflow = true;
+    } else {
+        $scope.display.mainflow = getLocalStorage("mainflowBool");
+    }
+    $scope.setMainFlowBool = function () {
+        saveLocalStorage("mainflowBool", $scope.display.mainflow);
+    };
+
+    if (getLocalStorage("displayVideoBool") === null) {
+        $scope.display.video = true;
+    } else {
+        $scope.display.video = getLocalStorage("displayVideoBool");
+    }
+    $scope.setDisplayVideoBool = function () {
+        saveLocalStorage("displayVideoBool", $scope.display.video);
+    };
+
+    if (getLocalStorage("displayImageBool") === null) {
+        $scope.display.image = true;
+    } else {
+        $scope.display.image = getLocalStorage("displayImageBool");
+    }
+    $scope.setDisplayImageBool = function () {
+        saveLocalStorage("displayImageBool", $scope.display.image);
+    };
+
+
+
+    $scope.filterMainflow = function(item) {
+        if($scope.display.mainflow && item.incId){
+            return true;
+        }else if(!item.incId){
+            return true;
+        }else {
+            return false;
+        }
+    };
+
+    $scope.filterType = function(item) {
+        if($scope.display){
+            return $scope.display[item.type];
+        }else {
+            return false;
+        }
+    };
+
+    $scope.filterReddit = function (item) {
+     return $scope.sourceArr.indexOf(item.subreddit) !== -1 || item.incId || item.userDomain;
+    };
+
+    $scope.filterDomain = function (item) {
+     return $scope.domainArr.indexOf(item.customDomain) !== -1 || item.incId || !item.userDomain;
+    };
+
+
+
+    var reddits = getLocalStorage("reddits");
+    var domains = getLocalStorage("domains");
+    if(reddits) $scope.sourceArr = reddits;
+    if(domains) $scope.domainArr = domains;
 
 
     $scope.removeItemReddit = function(index){
         $scope.sourceArr.splice(index, 1);
+        saveLocalStorage("reddits", $scope.sourceArr);
     };
     $scope.removeItemDomain = function(index){
         $scope.domainArr.splice(index, 1);
+        saveLocalStorage("domains", $scope.domainArr);
+    };
+
+
+    $scope.addSrc = function () {
+        if($scope.input.type === "Reddit"){
+            $scope.sourceArr.push($scope.input.source);
+            saveLocalStorage("reddits", $scope.sourceArr);
+            var temparr2 = [];
+            temparr2.push($scope.input.source);
+            executeAllReq(requestData, temparr2, [], $scope.display, function () {
+                $scope.displayData(temparr2, []);
+            });
+        }
+        if($scope.input.type === "Domain"){
+            $scope.domainArr.push($scope.input.source);
+            saveLocalStorage("domains", $scope.domainArr);
+            var temparr = [];
+            temparr.push($scope.input.source);
+            executeAllReq(requestData, [], temparr, $scope.display, function () {
+                $scope.displayData([], temparr);
+            });
+        }
     };
 
     $scope.getData = function(){
-        executeAllReq(requestData, $scope.sourceArr, $scope.domainArr, function () {
-            $scope.displayData();
+        executeAllReq(requestData, $scope.sourceArr, $scope.domainArr, $scope.display, function () {
+            $scope.displayData($scope.sourceArr, $scope.domainArr);
         });
     };
 
-    $scope.addSrc = function () {
-        if($scope.input.type === "Reddit")$scope.sourceArr.push($scope.input.source);
-        if($scope.input.type === "Domain")$scope.domainArr.push($scope.input.source);
-    };
-
-    $scope.displayData = function(){
+    $scope.displayData = function(sourceArr, domainArr){
         var dataArrsDom = [];
         var dataArrsSub = [];
-        var amountEachSubb = Math.ceil((displayAmount/($scope.sourceArr.length + $scope.domainArr.length)));
+        var amountEachSubb = Math.ceil((displayAmount/(sourceArr.length + domainArr.length)));
 
 
         var images = getSessionLocalStorage("images");
@@ -56,14 +137,14 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
             saveSessionLocalStorage("videos", "");
         }
 
-        angular.forEach($scope.sourceArr, function (value) {
+        angular.forEach(sourceArr, function (value) {
             var tempData1 = getLocalStorage(value);
             if(tempData1){
                 dataArrsSub = dataArrsSub.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData1));
             }
         });
 
-        angular.forEach($scope.sourceArr, function (value) {
+        angular.forEach(domainArr, function (value) {
             var tempData = getLocalStorage(value);
             if(tempData){
                 dataArrsDom = dataArrsDom.concat(getMediaFromLocalStorage(value, amountEachSubb, tempData));
@@ -71,35 +152,14 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         });
 
         dataArrsDom = dataArrsDom.concat(dataArrsSub);
-
-        $scope.dataArr = dataArrsDom;
-    };
-
-    $scope.$watch('[imagesBool, videosBool]', function (newVal) {
-        var tempObj = getLocalStorage("typeBools");
-
-        if(tempObj && typeof newVal[0] !== 'undefined'){
-            tempObj = {
-                imagesBool: newVal[0],
-                videosBool: newVal[1]
-            };
-            $scope.imagesBool = newVal[0];
-            $scope.videosBool = newVal[1];
-            saveLocalStorage("typeBools", tempObj);
-        }else if(tempObj){
-            $scope.imagesBool = tempObj.imagesBool;
-            $scope.videosBool = tempObj.videosBool;
-            saveLocalStorage("typeBools", tempObj);
+        console.log(dataArrsDom);
+        if(dataArrsDom.length === 0){
+            console.log("ERROR: No data to display, please check your src list or try load again");
         }else{
-            tempObj = {
-                imagesBool: true,
-                videosBool: true
-            };
-            $scope.imagesBool = tempObj.imagesBool;
-            $scope.videosBool = tempObj.videosBool;
-            saveLocalStorage("typeBools", tempObj);
+            $scope.dataArr = dataArrsDom;
         }
-    }, true);
+
+    };
 
     $scope.dataType = function (type, domain) {
         if(type === "video"){
@@ -186,3 +246,5 @@ $(document).ready(function () {
         htmlbodyHeightUpdate()
     });
 });
+
+

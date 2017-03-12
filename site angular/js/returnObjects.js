@@ -2,7 +2,7 @@
  * Created by isak16 on 2017-03-02.
  */
 
-function returnVideoObject(obj) {
+function returnVideoObject(obj, from, domain) {
     var type;
     if (obj.post_hint === "rich:video") {
         type = "video";
@@ -18,6 +18,7 @@ function returnVideoObject(obj) {
     return {
         "subreddit_name_prefixed": obj.subreddit_name_prefixed,
         "title": obj.title,
+        "subreddit": obj.subreddit,
         "type": type,
         "url": obj.url,
         "permalink": obj.permalink,
@@ -26,28 +27,30 @@ function returnVideoObject(obj) {
         "ups": obj.ups,
         "timestamp": Math.floor(Date.now() / 1000),
         "over_18": obj.over_18,
-        "media": media
+        "media": media,
+        "customDomain": from,
+        "userDomain": domain
     };
 }
 
-var executeAllReq = function (requestData, reddits, domains, callback) {
+var executeAllReq = function (requestData, reddits, domains, displayBool, callback) {
     var sourceObj = {
         subreddits: reddits,
         domains: domains
     };
 
     var loadTheseSubs = shouldWeLoadMoreData(sourceObj.subreddits, "r");
-    var type = requestTypeFromBools();
+    var type = requestTypeFromBools(displayBool);
     var counterObj = getLocalStorage("counterObj");
 
     var urls = [];
     //add mainflow
     if (type) {
         if(!counterObj) counterObj = {firstRequest: true};
-        var url = 'http://localhost:3000/api/hotpage/'+type;
+        var url1 = 'http://localhost:3000/api/hotpage/'+type;
 
         urls.push({
-            url: url,
+            url: url1,
             counterObj: counterObj,
             from: type
         });
@@ -59,7 +62,8 @@ var executeAllReq = function (requestData, reddits, domains, callback) {
         var url = 'https://www.reddit.com/r/' + loadTheseSubs[p] + '/hot/.json?after=' + after + '&limit=50';
         urls.push({
             url: url,
-            from: loadTheseSubs[p]
+            from: loadTheseSubs[p],
+            domain: false
         });
     }
     //add domain requests
@@ -70,7 +74,8 @@ var executeAllReq = function (requestData, reddits, domains, callback) {
             var url = 'https://www.reddit.com/domain/' + sourceObj.domains[i] + '/hot/.json?after=' + after + '&limit=50';
             urls.push({
                 url: url,
-                from: sourceObj.domains[i]
+                from: sourceObj.domains[i],
+                domain: true
             });
         }
     }
@@ -81,8 +86,9 @@ var executeAllReq = function (requestData, reddits, domains, callback) {
             console.log("ERROR:"+String);
         } else {
             angular.forEach(results, function (value) {
+                console.log(value);
                 if(value.reddit){
-                    var obj = {after: value.response.data.data.after, data: getMediaOnly(value.response.data.data.children)};
+                    var obj = {after: value.response.data.data.after, data: getMediaOnly(value.response.data.data.children, value.from, value.domain)};
                     saveLocalStorage(value.from, obj);
                 }else{
                     saveResponseLocal(value.from, value.response);
@@ -94,7 +100,6 @@ var executeAllReq = function (requestData, reddits, domains, callback) {
 
 
 };
-
 
 function shouldWeLoadMoreData(sourceName, from) {
     if (from === "r") {
@@ -121,21 +126,15 @@ function getMediaFromLocalStorage(source, amount, tempData) {
     return tempArr;
 }
 
-function requestTypeFromBools() {
-    var tempObj = getLocalStorage("typeBools");
-    if (!tempObj) {
-        tempObj = {
-            imagesBool: true,
-            videosBool: true
-        };
-        saveLocalStorage("typeBools", tempObj);
-    }
+function requestTypeFromBools(displayBool) {
+    if(!displayBool)return false;
+    if(!displayBool.mainflow) return false;
 
-    if (tempObj.imagesBool && !tempObj.videosBool) {
+    if (displayBool.image && !displayBool.video) {
         return "images";
-    } else if (!tempObj.imagesBool && tempObj.videosBool) {
+    } else if (!displayBool.image && displayBool.video) {
         return "videos";
-    } else if (!tempObj.imagesBool && !tempObj.videosBool) {
+    } else if (!displayBool.image && !displayBool.video) {
         return false;
     } else {
         return "both";
