@@ -49,13 +49,7 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
 
 
     $scope.filterMainflow = function(item) {
-        if($scope.display.mainflow && item.incId){
-            return true;
-        }else if(!item.incId){
-            return true;
-        }else {
-            return false;
-        }
+        return $scope.display.mainflow && item.incId || !item.incId;
     };
 
     $scope.filterType = function(item) {
