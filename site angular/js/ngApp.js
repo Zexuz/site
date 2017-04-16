@@ -2,6 +2,7 @@
  * Created by isak16 on 2017-02-27.
  */
 var app = angular.module('app', []);
+var loading = false;
 
 app.config(function($sceDelegateProvider) {
     $sceDelegateProvider.resourceUrlWhitelist([
@@ -11,6 +12,8 @@ app.config(function($sceDelegateProvider) {
     ]);
 });
 
+
+
 app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData) {
 
     $scope.dataArr = [];
@@ -18,6 +21,12 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     $scope.sourceArr = [];
     $scope.domainArr = [];
     $scope.display = {};
+    $scope.input = {};
+    $scope.input.type = "Reddit";
+
+
+
+    $scope.hideReddit = [];
 
     if (getLocalStorage("mainflowBool") === null) {
         $scope.display.mainflow = true;
@@ -25,7 +34,9 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         $scope.display.mainflow = getLocalStorage("mainflowBool");
     }
     $scope.setMainFlowBool = function () {
+        $scope.display.mainflow = !$scope.display.mainflow;
         saveLocalStorage("mainflowBool", $scope.display.mainflow);
+        //TODO  Append data
     };
 
     if (getLocalStorage("displayVideoBool") === null) {
@@ -34,6 +45,7 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         $scope.display.video = getLocalStorage("displayVideoBool");
     }
     $scope.setDisplayVideoBool = function () {
+        $scope.display.video = !$scope.display.video;
         saveLocalStorage("displayVideoBool", $scope.display.video);
     };
 
@@ -43,10 +55,23 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         $scope.display.image = getLocalStorage("displayImageBool");
     }
     $scope.setDisplayImageBool = function () {
+        $scope.display.image = !$scope.display.image;
         saveLocalStorage("displayImageBool", $scope.display.image);
     };
 
+    if (getLocalStorage("displayFilterBool") === null) {
+        $scope.display.filter = false;
+    } else {
+        $scope.display.filter = getLocalStorage("displayFilterBool");
+    }
+    $scope.setDisplayFilterBool = function () {
+        $scope.display.filter = !$scope.display.filter;
+        saveLocalStorage("displayFilterBool", $scope.display.filter);
+    };
 
+    if(!$scope.display.filter){
+        clearReddits();
+    }
 
     $scope.filterMainflow = function(item) {
         return $scope.display.mainflow && item.incId || !item.incId;
@@ -61,14 +86,17 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     };
 
     $scope.filterReddit = function (item) {
-     return $scope.sourceArr.indexOf(item.subreddit) !== -1 || item.incId || item.userDomain;
+     return $scope.sourceArr.indexOf(item.subreddit.toLowerCase()) !== -1 || item.incId || item.userDomain;
     };
 
     $scope.filterDomain = function (item) {
      return $scope.domainArr.indexOf(item.customDomain) !== -1 || item.incId || !item.userDomain;
     };
 
-
+    $scope.reset = function () {
+        localStorage.clear();
+        location.reload();
+    };
 
     var reddits = getLocalStorage("reddits");
     var domains = getLocalStorage("domains");
@@ -76,7 +104,7 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     if(domains) $scope.domainArr = domains;
 
 
-    $scope.removeItemReddit = function(index){
+    $scope.removeItemReddit = function(index, item){
         $scope.sourceArr.splice(index, 1);
         saveLocalStorage("reddits", $scope.sourceArr);
     };
@@ -88,28 +116,40 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
 
     $scope.addSrc = function () {
         if($scope.input.type === "Reddit"){
-            $scope.sourceArr.push($scope.input.source);
+            if($scope.sourceArr.indexOf($scope.input.source) > -1){
+                $scope.err = "r/"+$scope.input.source+" already exists in source list";
+                return;
+            }
+            $scope.sourceArr.push($scope.input.source.toLowerCase());
+
             saveLocalStorage("reddits", $scope.sourceArr);
             var temparr2 = [];
             temparr2.push($scope.input.source);
-            executeAllReq(requestData, temparr2, [], $scope.display, function () {
-                $scope.displayData(temparr2, []);
-            });
+            $scope.input.source = "";
+            //TODO  Append data
         }
         if($scope.input.type === "Domain"){
             $scope.domainArr.push($scope.input.source);
             saveLocalStorage("domains", $scope.domainArr);
             var temparr = [];
             temparr.push($scope.input.source);
-            executeAllReq(requestData, [], temparr, $scope.display, function () {
-                $scope.displayData([], temparr);
-            });
+            //TODO  Append data
         }
     };
 
+    $scope.openModal = function (url) {
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+           return;
+        }
+        $('.enlargeImageModalSource').attr('src', url);
+        $('#enlargeImageModal').modal('show');
+    };
+
     $scope.getData = function(){
-        executeAllReq(requestData, $scope.sourceArr, $scope.domainArr, $scope.display, function () {
+        executeAllReq(requestData, $scope.sourceArr, $scope.domainArr, $scope.display, function (callback) {
+            if(callback) $scope.err = "Reddit "+callback+ " couldn't load. Please check that you spelled it right.";
             $scope.displayData($scope.sourceArr, $scope.domainArr);
+            loading = false;
         });
     };
 
@@ -146,14 +186,19 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
         });
 
         dataArrsDom = dataArrsDom.concat(dataArrsSub);
-        console.log(dataArrsDom);
-        if(dataArrsDom.length === 0){
-            console.log("ERROR: No data to display, please check your src list or try load again");
-        }else{
-            $scope.dataArr = dataArrsDom;
-        }
+        sessionDataArray.push(dataArrsDom);
 
+        if(dataArrsDom.length === 0){
+          //  $scope.err = "No data to display, please check your source list or try load again";
+        }else{
+            $scope.dataArr = sessionDataArray;
+        }
     };
+
+    $scope.removeError = function () {
+        $scope.err = "";
+    };
+
 
     $scope.dataType = function (type, domain) {
         if(type === "video"){
@@ -181,7 +226,17 @@ app.controller('mainflow', function ($scope, $rootScope, $http, $q, requestData)
     };
 
     $scope.getData();
+
+    $(window).scroll(function() {
+        if($(window).scrollTop() + $(window).height() > $(document).height() - 100 && !loading) {
+            loading = true;
+            $scope.getData();
+        }
+    });
+
 });
+
+
 
 app.controller("youtubeController", function ($scope) {
     $scope.videoId = function getYoutubeVideoId(url) {
@@ -213,32 +268,4 @@ app.controller("gfycatController", function ($scope) {
     }
 
 });
-
-
-function htmlbodyHeightUpdate(){
-    var height3 = $( window ).height()
-    var height1 = $('.nav').height()+50
-    height2 = $('.main').height()
-    if(height2 > height3){
-        $('html').height(Math.max(height1,height3,height2)+10);
-        $('body').height(Math.max(height1,height3,height2)+10);
-    }
-    else
-    {
-        $('html').height(Math.max(height1,height3,height2));
-        $('body').height(Math.max(height1,height3,height2));
-    }
-
-}
-$(document).ready(function () {
-    htmlbodyHeightUpdate()
-    $( window ).resize(function() {
-        htmlbodyHeightUpdate()
-    });
-    $( window ).scroll(function() {
-        height2 = $('.main').height()
-        htmlbodyHeightUpdate()
-    });
-});
-
 

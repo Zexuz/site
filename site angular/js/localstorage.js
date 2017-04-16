@@ -21,3 +21,10 @@ function getSessionLocalStorage(name){
     var retrievedObject = sessionStorage.getItem(name);
     return JSON.parse(retrievedObject);
 }
+
+function clearReddits() {
+    var retrievedObject = JSON.parse(localStorage.getItem("reddits"));
+    angular.forEach(retrievedObject, function (item) {
+        localStorage.removeItem(item);
+    });
+}

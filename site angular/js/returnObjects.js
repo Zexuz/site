@@ -44,10 +44,13 @@ var executeAllReq = function (requestData, reddits, domains, displayBool, callba
     var counterObj = getLocalStorage("counterObj");
 
     var urls = [];
+
+    type = reqLowData(counterObj, type);
+
     //add mainflow
     if (type) {
         if(!counterObj) counterObj = {firstRequest: true};
-        var url1 = 'http://localhost:3000/api/hotpage/'+type;
+        var url1 = 'http://normie.tv:3000/api/hotpage/'+type;
 
         urls.push({
             url: url1,
@@ -79,22 +82,22 @@ var executeAllReq = function (requestData, reddits, domains, displayBool, callba
             });
         }
     }
-
+    console.log(urls);
     async.map(urls, requestData.request, function(err, results){
         if (err){
             var String=err.config.url.substring(err.config.url.lastIndexOf("com/")+4,err.config.url.lastIndexOf("/hot"));
-            console.log("ERROR:"+String);
+            callback(String);
         } else {
             angular.forEach(results, function (value) {
-                console.log(value);
                 if(value.reddit){
                     var obj = {after: value.response.data.data.after, data: getMediaOnly(value.response.data.data.children, value.from, value.domain)};
+
                     saveLocalStorage(value.from, obj);
                 }else{
                     saveResponseLocal(value.from, value.response);
                 }
             });
-            callback("done");
+            callback("");
         }
     });
 
@@ -191,4 +194,34 @@ function saveResponseLocal(type, response) {
         saveSessionLocalStorage(type, response.data.media);
         saveCounterObj(response.data);
     }
+}
+
+function reqLowData(obj, type) {
+    if(!type || !obj)return type;
+    if(type === "both"){
+        if(obj.vidLow < 26){
+            if(obj.imgLow < 26){
+                return false;
+            }else {
+                return "images";
+            }
+        }else if(obj.imgLow < 26){
+            if(obj.vidLow < 26){
+                return false;
+            }else {
+                return "videos";
+            }
+        }else {
+            return type;
+        }
+    }
+
+    if(type === "images" && obj.imgLow < 26){
+        return false;
+    }
+    if(type === "videos" && obj.vidLow < 26){
+        return false;
+    }
+
+    return type;
 }

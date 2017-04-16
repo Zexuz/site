@@ -5,3 +5,11 @@
 var displayAmount = 15;
 
 var dataLimitLoadMore = displayAmount*2;
+
+var sessionDataArray = [];
+
+
+$('[data-toggle="tooltip"]').tooltip();
+
+
+
